@@ -8,10 +8,10 @@ namespace BitTorrentFeatures
     {
         private readonly FrozenDictionary<string, object> dict;
 
-        public string TrackerUrl { get => (string)dict["announce"]; }
+        public string TrackerUrl { get => (string)(BencodeString)dict["announce"]; }
         public FrozenDictionary<string, object> Info { get => (FrozenDictionary<string, object>) dict["info"]; }
         public long Length { get => (long)Info["length"]; }
-        public string Name { get => (string)Info["name"]; }
+        public string Name { get => (string)(BencodeString)Info["name"]; }
         public string InfoHash { get; }
 
         private Torrent(Stream stream)
