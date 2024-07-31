@@ -18,7 +18,7 @@ namespace BitTorrentFeatures
             get 
             {
                 BencodeString pieces = (BencodeString)Info["pieces"];
-                return Enumerable.Range(0, pieces.Length / 40).Select(i => pieces.Bytes[(i*40)..(i*40+40)]);
+                return Enumerable.Range(0, pieces.Length / 20).Select(i => pieces.Bytes[(i*20)..(i*20+20)]);
             }
         }
 
