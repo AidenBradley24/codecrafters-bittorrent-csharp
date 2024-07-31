@@ -27,7 +27,7 @@ else if (command == "info")
         $"Length: {tor.Length}\n" +
         $"Info Hash: {tor.InfoHash}\n" +
         $"Piece Length: {tor.PieceLength}\n" +
-        $"Piece Hashes:\n{string.Concat(tor.Pieces.Select(s => s + '\n'))}");
+        $"Piece Hashes:\n{string.Concat(tor.Pieces.Select(h => HashUtil.HashHex(h) + '\n'))}");
 }
 else
 {

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Frozen;
+﻿using System.Collections.Frozen;
 using System.Security.Cryptography;
 
 namespace BitTorrentFeatures
@@ -14,12 +13,12 @@ namespace BitTorrentFeatures
         public string Name { get => (string)(BencodeString)Info["name"]; }
         public string InfoHash { get; }
         public long PieceLength { get => (long)Info["piece length"]; }
-        public IEnumerable<string> Pieces
+        public IEnumerable<byte[]> Pieces
         {
             get 
             {
-                string pieces = (string)(BencodeString)Info["pieces"];
-                return Enumerable.Range(0, pieces.Length / 40).Select(i => pieces.Substring(i * 40, 40));
+                BencodeString pieces = (BencodeString)Info["pieces"];
+                return Enumerable.Range(0, pieces.Length / 40).Select(i => pieces.Bytes[(i*40)..(i*40+40)]);
             }
         }
 
@@ -33,7 +32,7 @@ namespace BitTorrentFeatures
             writer.WriteDictionary(Info);
             byte[] bytes = ms.ToArray();
             byte[] hash = SHA1.HashData(bytes);
-            InfoHash = BitConverter.ToString(hash).Replace("-", "").ToLower();
+            InfoHash = HashUtil.HashHex(hash);
         }
 
         public static Torrent ReadStream(Stream stream)
