@@ -8,10 +8,10 @@ namespace BitTorrentFeatures
         public Stream BaseStream { get => br.BaseStream; }
         private readonly BinaryReader br = new(baseStream, Encoding.UTF8);
 
-        public string ReadString()
+        public BencodeString ReadString()
         {
             int length = int.Parse(ReadUntilChar(':'));
-            return Encoding.UTF8.GetString(br.ReadBytes(length));
+            return new BencodeString(br.ReadBytes(length));
         }
 
         public long ReadInt()
@@ -38,7 +38,7 @@ namespace BitTorrentFeatures
             Dictionary<string, object> result = [];
             while ((char)br.PeekChar() != 'e')
             {
-                string key = ReadString();
+                string key = (string)ReadString();
                 object value = ReadAny();
                 result.Add(key, value);
             }
