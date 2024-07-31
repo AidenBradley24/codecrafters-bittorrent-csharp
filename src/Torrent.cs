@@ -20,6 +20,7 @@ namespace BitTorrentFeatures
             dict = reader.ReadDictionary().ToFrozenDictionary();
 
             // test
+            stream.Position = 0;
             StreamReader sr = new StreamReader(stream);
             Console.WriteLine("EXPECTED (including whole)");
             Console.WriteLine(sr.ReadToEnd());
