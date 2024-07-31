@@ -1,4 +1,5 @@
 ﻿using System.Collections.Frozen;
+using System.Security.Cryptography;
 
 namespace BitTorrentFeatures
 {
@@ -10,11 +11,19 @@ namespace BitTorrentFeatures
         public FrozenDictionary<string, object> Info { get => (FrozenDictionary<string, object>) dict["info"]; }
         public long Length { get => (long)Info["length"]; }
         public string Name { get => (string)Info["name"]; }
+        public string Hash { get; }
 
         private Torrent(Stream stream)
         {
-            BencodeReader bencode = new(stream);
-            dict = bencode.ReadDictionary().ToFrozenDictionary();
+            BencodeReader reader = new(stream);
+            dict = reader.ReadDictionary().ToFrozenDictionary();
+
+            using MemoryStream ms = new();
+            BencodeWriter writer = new(ms);
+            writer.WriteDictionary(dict);
+            byte[] bytes = ms.ToArray();
+            byte[] hash = SHA1.HashData(bytes);
+            Hash = BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
 
         public static Torrent ReadStream(Stream stream)
