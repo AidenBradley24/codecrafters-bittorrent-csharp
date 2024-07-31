@@ -1,6 +1,6 @@
-﻿using System.Collections.Frozen;
+﻿using System.Collections;
+using System.Collections.Frozen;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace BitTorrentFeatures
 {
@@ -13,6 +13,15 @@ namespace BitTorrentFeatures
         public long Length { get => (long)Info["length"]; }
         public string Name { get => (string)(BencodeString)Info["name"]; }
         public string InfoHash { get; }
+        public long PieceLength { get => (long)Info["piece length"]; }
+        public IEnumerable<string> Pieces
+        {
+            get 
+            {
+                string pieces = (string)(BencodeString)Info["pieces"];
+                return Enumerable.Range(0, pieces.Length / 40).Select(i => pieces.Substring(i * 40, 40));
+            }
+        }
 
         private Torrent(Stream stream)
         {

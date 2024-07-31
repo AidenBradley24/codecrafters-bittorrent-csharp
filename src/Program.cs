@@ -22,7 +22,12 @@ else if (command == "info")
 {
     using FileStream fs = new(param, FileMode.Open);
     var tor = Torrent.ReadStream(fs);
-    Console.WriteLine($"Tracker URL: {tor.TrackerUrl}\nLength: {tor.Length}\nInfo Hash: {tor.InfoHash}");
+    Console.WriteLine(
+        $"Tracker URL: {tor.TrackerUrl}\n" +
+        $"Length: {tor.Length}\n" +
+        $"Info Hash: {tor.InfoHash}\n" +
+        $"Piece Length: {tor.PieceLength}\n" +
+        $"Piece Hashes:\n{string.Concat(tor.Pieces.Select(s => s + '\n'))}");
 }
 else
 {
