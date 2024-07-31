@@ -27,6 +27,7 @@ namespace BitTorrentFeatures
             {
                 list.Add(ReadAny());
             }
+            BaseStream.Position++; // skip 'e'
             return list;
         }
 
