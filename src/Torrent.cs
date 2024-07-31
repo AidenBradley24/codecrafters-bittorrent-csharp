@@ -1,5 +1,6 @@
 ﻿using System.Collections.Frozen;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace BitTorrentFeatures
 {
@@ -18,10 +19,19 @@ namespace BitTorrentFeatures
             BencodeReader reader = new(stream);
             dict = reader.ReadDictionary().ToFrozenDictionary();
 
+            // test
+            StreamReader sr = new StreamReader(stream);
+            Console.WriteLine("EXPECTED (including whole)");
+            Console.WriteLine(sr.ReadToEnd());
+            Console.WriteLine("ACTUAL");
+
             using MemoryStream ms = new();
             BencodeWriter writer = new(ms);
             writer.WriteDictionary(Info);
             byte[] bytes = ms.ToArray();
+
+            Console.WriteLine(Encoding.UTF8.GetString(bytes));
+
             byte[] hash = SHA1.HashData(bytes);
             InfoHash = BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
