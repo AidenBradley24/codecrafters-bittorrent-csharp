@@ -23,7 +23,7 @@ namespace BitTorrentFeatures
         {
             Write(value.Length);
             Write(":");
-            Write(value);
+            BaseStream.Write(value.Bytes);
         }
 
         public void WriteInt(long value)
