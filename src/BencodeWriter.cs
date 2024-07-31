@@ -19,6 +19,13 @@ namespace BitTorrentFeatures
             Write(value);
         }
 
+        public void WriteString(BencodeString value)
+        {
+            Write(value.Length);
+            Write(":");
+            Write(value);
+        }
+
         public void WriteInt(long value)
         {
             Write("i");
@@ -49,7 +56,11 @@ namespace BitTorrentFeatures
 
         public void WriteAny(object value)
         {
-            if (value is string s)
+            if (value is BencodeString bs)
+            {
+                WriteString(bs);
+            }
+            else if (value is string s)
             {
                 WriteString(s);
             }
