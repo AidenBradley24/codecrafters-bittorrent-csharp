@@ -31,6 +31,19 @@ namespace BitTorrentFeatures
             return list;
         }
 
+        public Dictionary<string, object> ReadDictionary()
+        {
+            BaseStream.Position++; // skip 'd'
+            Dictionary<string, object> result = [];
+            while ((char)br.PeekChar() != 'e')
+            {
+                string key = ReadString();
+                object value = ReadAny();
+                result.Add(key, value);
+            }
+            return result;
+        }
+
         public object ReadAny()
         {
             char first = (char)br.PeekChar();
@@ -45,6 +58,10 @@ namespace BitTorrentFeatures
             else if (first == 'l')
             {
                 return ReadList();
+            }
+            else if (first == 'd')
+            {
+                return ReadDictionary();
             }
             else
             {
