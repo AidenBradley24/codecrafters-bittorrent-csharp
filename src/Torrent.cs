@@ -11,7 +11,7 @@ namespace BitTorrentFeatures
         public FrozenDictionary<string, object> Info { get => (FrozenDictionary<string, object>) dict["info"]; }
         public long Length { get => (long)Info["length"]; }
         public string Name { get => (string)Info["name"]; }
-        public string Hash { get; }
+        public string InfoHash { get; }
 
         private Torrent(Stream stream)
         {
@@ -20,10 +20,10 @@ namespace BitTorrentFeatures
 
             using MemoryStream ms = new();
             BencodeWriter writer = new(ms);
-            writer.WriteDictionary(dict);
+            writer.WriteDictionary(Info);
             byte[] bytes = ms.ToArray();
             byte[] hash = SHA1.HashData(bytes);
-            Hash = BitConverter.ToString(hash).Replace("-", "").ToLower();
+            InfoHash = BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
 
         public static Torrent ReadStream(Stream stream)

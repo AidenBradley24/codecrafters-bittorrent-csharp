@@ -22,7 +22,7 @@ else if (command == "info")
 {
     using FileStream fs = new(param, FileMode.Open);
     var tor = Torrent.ReadStream(fs);
-    Console.WriteLine($"Tracker URL: {tor.TrackerUrl}\nLength: {tor.Length}");
+    Console.WriteLine($"Tracker URL: {tor.TrackerUrl}\nLength: {tor.Length}\nInfo Hash: {tor.InfoHash}");
 }
 else
 {
