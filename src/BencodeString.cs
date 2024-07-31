@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace BitTorrentFeatures
 {
     [JsonConverter(typeof(BencodeStringJsonConverter))]
-    public readonly struct BencodeString(byte[] bytes)
+    public class BencodeString(byte[] bytes)
     {
         public byte[] Bytes { get; } = bytes;
         public int Length { get => Bytes.Length; }
