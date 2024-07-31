@@ -1,4 +1,5 @@
 using BitTorrentFeatures;
+using System.Text;
 using System.Text.Json;
 
 // Parse arguments
@@ -12,7 +13,10 @@ var (command, param) = args.Length switch
 // Parse command and act accordingly
 if (command == "decode")
 {
-    Console.WriteLine(JsonSerializer.Serialize(Bencode.Decode(param)));
+    MemoryStream ms = new(Encoding.UTF8.GetBytes(param));
+    ms.Position = 0;
+    BencodeReader reader = new(ms);
+    Console.WriteLine(JsonSerializer.Serialize(reader.ReadAny()));
 }
 else
 {
