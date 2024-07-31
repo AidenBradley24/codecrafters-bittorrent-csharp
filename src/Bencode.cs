@@ -26,7 +26,7 @@
                 int endIndex = encodedValue.IndexOf('e');
                 if (endIndex != -1)
                 {
-                    int value = int.Parse(encodedValue[..endIndex]);
+                    int value = int.Parse(encodedValue[1..endIndex]);
                     return value;
                 }
                 else
