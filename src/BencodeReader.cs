@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Collections.Frozen;
 
 namespace BitTorrentFeatures
 {
@@ -19,7 +20,7 @@ namespace BitTorrentFeatures
             return long.Parse(ReadUntilChar('e')); 
         }
 
-        public List<object> ReadList()
+        public object[] ReadList()
         {
             List<object> list = [];
             BaseStream.Position++;
@@ -28,10 +29,10 @@ namespace BitTorrentFeatures
                 list.Add(ReadAny());
             }
             BaseStream.Position++; // skip 'e'
-            return list;
+            return [.. list];
         }
 
-        public Dictionary<string, object> ReadDictionary()
+        public FrozenDictionary<string, object> ReadDictionary()
         {
             BaseStream.Position++; // skip 'd'
             Dictionary<string, object> result = [];
@@ -41,7 +42,7 @@ namespace BitTorrentFeatures
                 object value = ReadAny();
                 result.Add(key, value);
             }
-            return result;
+            return result.ToFrozenDictionary();
         }
 
         public object ReadAny()

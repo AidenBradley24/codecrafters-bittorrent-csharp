@@ -18,6 +18,12 @@ if (command == "decode")
     BencodeReader reader = new(ms);
     Console.WriteLine(JsonSerializer.Serialize(reader.ReadAny()));
 }
+else if (command == "info")
+{
+    using FileStream fs = new(param, FileMode.Open);
+    var tor = Torrent.ReadStream(fs);
+    Console.WriteLine($"Tracker URL: {tor.TrackerUrl}\nLength: {tor.Length}");
+}
 else
 {
     throw new InvalidOperationException($"Invalid command: {command}");
