@@ -47,13 +47,10 @@ else if (command == "peers")
         $"left={tor.Length}&" +
         $"compact=1";
 
-    Console.WriteLine(builder.Uri);
-
     var response = client.Send(new HttpRequestMessage(HttpMethod.Get, builder.Uri));
     Stream stream = response.Content.ReadAsStream();
     BencodeReader reader = new(stream);
     var dict = reader.ReadDictionary();
-    Console.WriteLine(string.Concat(dict.Keys.Select(k => $"key: {k},")));
     ReadOnlySpan<byte> peers = ((BencodeString)dict["peers"]).Bytes;
 
     for (int i = 0; i < peers.Length; i += 6)
