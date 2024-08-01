@@ -51,6 +51,7 @@ else if (command == "peers")
     Stream stream = response.Content.ReadAsStream();
     BencodeReader reader = new(stream);
     var dict = reader.ReadDictionary();
+    Console.WriteLine(string.Concat(dict.Keys.Select(k => $"key: {k},")));
     ReadOnlySpan<byte> peers = ((BencodeString)dict["peers"]).Bytes;
 
     for (int i = 0; i < peers.Length; i += 6)
