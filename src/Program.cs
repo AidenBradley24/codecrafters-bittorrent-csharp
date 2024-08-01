@@ -56,7 +56,7 @@ else if (command == "peers")
     for (int i = 0; i < peers.Length; i += 6)
     {
         IPAddress address = new(peers[i..(i+4)]);
-        ushort portNumber = BitConverter.ToUInt16(peers[(i+4)..(i+6)]);
+        short portNumber = BitConverter.ToInt16(peers[(i+4)..(i+6)]);
         string ipString = $"{address}:{portNumber}";
         Console.WriteLine(ipString);
     }
