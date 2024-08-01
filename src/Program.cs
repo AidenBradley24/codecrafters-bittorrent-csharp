@@ -39,12 +39,12 @@ else if (command == "peers")
 
     UriBuilder builder = new(tor.TrackerUrl);
     builder.Query = 
-        $"info_hash=%{BitConverter.ToString(tor.InfoHash).Replace('-', '%').ToLower()}" +
-        $"peer_id=00112233445566778899" +
-        $"port=6881" +
-        $"uploaded=0" +
-        $"downloaded=0" +
-        $"left={tor.Length}" +
+        $"info_hash=%{BitConverter.ToString(tor.InfoHash).Replace('-', '%').ToLower()}&" +
+        $"peer_id=00112233445566778899&" +
+        $"port=6881&" +
+        $"uploaded=0&" +
+        $"downloaded=0&" +
+        $"left={tor.Length}&" +
         $"compact=1";
 
     Console.WriteLine(builder.Uri);
