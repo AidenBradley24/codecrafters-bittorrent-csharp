@@ -47,6 +47,8 @@ else if (command == "peers")
         $"left={tor.Length}" +
         $"compact=1";
 
+    Console.WriteLine(builder.Uri);
+
     var response = client.Send(new HttpRequestMessage(HttpMethod.Get, builder.Uri));
     Stream stream = response.Content.ReadAsStream();
     BencodeReader reader = new(stream);
