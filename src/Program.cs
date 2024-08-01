@@ -27,9 +27,9 @@ else if (command == "info")
     Console.WriteLine(
         $"Tracker URL: {tor.TrackerUrl}\n" +
         $"Length: {tor.Length}\n" +
-        $"Info Hash: {HashUtil.HashHex(tor.InfoHash)}\n" +
+        $"Info Hash: {MiscUtils.HashHex(tor.InfoHash)}\n" +
         $"Piece Length: {tor.PieceLength}\n" +
-        $"Piece Hashes:\n{string.Concat(tor.Pieces.Select(h => HashUtil.HashHex(h) + '\n'))}");
+        $"Piece Hashes:\n{string.Concat(tor.Pieces.Select(h => MiscUtils.HashHex(h) + '\n'))}");
 }
 else if (command == "peers")
 {
@@ -56,7 +56,7 @@ else if (command == "peers")
     for (int i = 0; i < peers.Length; i += 6)
     {
         IPAddress address = new(peers[i..(i+4)]);
-        short portNumber = BitConverter.ToInt16(peers[(i+4)..(i+6)]);
+        ushort portNumber = BitConverter.ToUInt16(MiscUtils.BigEndian(peers[(i+4)..(i+6)]));
         string ipString = $"{address}:{portNumber}";
         Console.WriteLine(ipString);
     }
