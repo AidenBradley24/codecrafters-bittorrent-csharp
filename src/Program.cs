@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 
-byte[] MY_PEER_ID = [0x0, 0x0, 0x1, 0x1, 0x2, 0x2, 0x3, 0x3, 0x4, 0x4, 0x5, 0x5, 0x6, 0x6, 0x7, 0x7, 0x8, 0x8, 0x9, 0x9];
+const string MY_PEER_ID = "00112233445566778899";
 const string PROTOCOL = "BitTorrent protocol";
 
 // Parse arguments
@@ -43,7 +43,7 @@ else if (command == "peers")
     UriBuilder builder = new(tor.TrackerUrl);
     builder.Query = 
         $"info_hash=%{BitConverter.ToString(tor.InfoHash).Replace('-', '%').ToLower()}&" +
-        $"peer_id={MiscUtils.Hex(MY_PEER_ID)}&" +
+        $"peer_id={MY_PEER_ID}&" +
         $"port=6881&" +
         $"uploaded=0&" +
         $"downloaded=0&" +
@@ -79,7 +79,7 @@ else if (command == "handshake")
     ns.Write(Encoding.UTF8.GetBytes(PROTOCOL));
     for (int i = 0; i < 8; i++) ns.WriteByte(0);
     ns.Write(tor.InfoHash);
-    ns.Write(MY_PEER_ID);
+    ns.Write(Encoding.UTF8.GetBytes(MY_PEER_ID));
 
     BinaryReader br = new(ns);
     byte len = br.ReadByte();
