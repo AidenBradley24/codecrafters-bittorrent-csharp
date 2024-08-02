@@ -2,9 +2,9 @@
 {
     public static class MiscUtils
     {
-        public static string HashHex(byte[] hash)
+        public static string Hex(byte[] bytes)
         {
-            return BitConverter.ToString(hash).Replace("-", "").ToLower();
+            return BitConverter.ToString(bytes).Replace("-", "").ToLower();
         }
 
         public static byte[] BigEndian(ReadOnlySpan<byte> span)
