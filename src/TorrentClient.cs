@@ -19,7 +19,7 @@ namespace BitTorrentFeatures
             tcp.Dispose();
         }
 
-        public Task DownloadPiece(FileInfo pieceFile, int pieceIndex)
+        public void DownloadPiece(FileInfo pieceFile, int pieceIndex)
         {
             NetworkStream ns = tcp.GetStream();
             var message = PeerMessage.Recieve(ns);
@@ -45,8 +45,6 @@ namespace BitTorrentFeatures
             if (!SHA1.HashData(data).SequenceEqual(hash)) throw new Exception("Hash does not match for piece " + pieceIndex);
             using var fs = pieceFile.OpenWrite();
             fs.Write(data);
-
-            return Task.CompletedTask;
         }
     }
 }

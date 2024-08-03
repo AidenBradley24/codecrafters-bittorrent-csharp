@@ -54,8 +54,7 @@ else if (command == "download_piece")
     var tor = Torrent.ReadStream(fs);
     int pieceIndex = int.Parse(args[4]);
     using TorrentClient client = tor.PerformHandshake(tor.Peers.First());
-    Task task = client.DownloadPiece(file, pieceIndex);
-    task.Wait();
+    client.DownloadPiece(file, pieceIndex);
     Console.WriteLine($"Piece {pieceIndex} downloaded to {args[2]}");
 }
 else
