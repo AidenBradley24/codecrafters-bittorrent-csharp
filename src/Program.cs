@@ -4,9 +4,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 
-const string MY_PEER_ID = "00112233445566778899";
-const string PROTOCOL = "BitTorrent protocol";
-
 // Parse arguments
 var (command, param1, param2) = args.Length switch
 {
@@ -38,58 +35,28 @@ else if (command == "peers")
 {
     using FileStream fs = new(param1, FileMode.Open);
     var tor = Torrent.ReadStream(fs);
-    HttpClient client = new();
-
-    UriBuilder builder = new(tor.TrackerUrl);
-    builder.Query = 
-        $"info_hash=%{BitConverter.ToString(tor.InfoHash).Replace('-', '%').ToLower()}&" +
-        $"peer_id={MY_PEER_ID}&" +
-        $"port=6881&" +
-        $"uploaded=0&" +
-        $"downloaded=0&" +
-        $"left={tor.Length}&" +
-        $"compact=1";
-
-    var response = client.Send(new HttpRequestMessage(HttpMethod.Get, builder.Uri));
-    Stream stream = response.Content.ReadAsStream();
-    BencodeReader reader = new(stream);
-    var dict = reader.ReadDictionary();
-    ReadOnlySpan<byte> peers = ((BencodeString)dict["peers"]).Bytes;
-
-    for (int i = 0; i < peers.Length; i += 6)
+    foreach (IPEndPoint peer in tor.Peers)
     {
-        IPAddress address = new(peers[i..(i+4)]);
-        ushort portNumber = BitConverter.ToUInt16(MiscUtils.BigEndian(peers[(i+4)..(i+6)]));
-        string ipString = $"{address}:{portNumber}";
-        Console.WriteLine(ipString);
+        Console.WriteLine(peer);
     }
 }
 else if (command == "handshake")
 {
     using FileStream fs = new(param1, FileMode.Open);
     var tor = Torrent.ReadStream(fs);
-    TcpClient client = new();
-    var strs = param2!.Split(':');
-    IPAddress ip = IPAddress.Parse(strs[0]);
-    int port = int.Parse(strs[1]);
-    client.Connect(ip, port);
-    NetworkStream ns = client.GetStream();
-
-    ns.WriteByte(Convert.ToByte(PROTOCOL.Length));
-    ns.Write(Encoding.UTF8.GetBytes(PROTOCOL));
-    for (int i = 0; i < 8; i++) ns.WriteByte(0);
-    ns.Write(tor.InfoHash);
-    ns.Write(Encoding.UTF8.GetBytes(MY_PEER_ID));
-
-    BinaryReader br = new(ns);
-    byte len = br.ReadByte();
-    string protocol = Encoding.UTF8.GetString(br.ReadBytes(len));
-    if (protocol != PROTOCOL) throw new Exception("protocol does not match");
-    br.ReadBytes(8);
-    byte[] hash = br.ReadBytes(20);
-    byte[] peer = br.ReadBytes(20);
-
-    Console.WriteLine($"Peer ID: {MiscUtils.Hex(peer)}");
+    using TorrentClient client = tor.PerformHandshake(IPEndPoint.Parse(param2!));
+    Console.WriteLine($"Peer ID: {client.PeerID}");
+}
+else if (command == "download_piece")
+{
+    FileInfo file = new(args[2]);
+    using FileStream fs = new(args[3], FileMode.Open);
+    var tor = Torrent.ReadStream(fs);
+    int pieceIndex = int.Parse(args[4]);
+    using TorrentClient client = tor.PerformHandshake(tor.Peers.First());
+    Task task = client.DownloadPiece(file, pieceIndex);
+    task.Wait();
+    Console.WriteLine($"Piece {pieceIndex} downloaded to {args[2]}");
 }
 else
 {

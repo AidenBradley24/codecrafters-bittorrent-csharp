@@ -1,10 +1,16 @@
 ﻿using System.Collections.Frozen;
+using System.Net.Sockets;
+using System.Net;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace BitTorrentFeatures
 {
     public class Torrent
     {
+        const string MY_PEER_ID = "00112233445566778899";
+        const string PROTOCOL = "BitTorrent protocol";
+
         private readonly FrozenDictionary<string, object> dict;
 
         public string TrackerUrl { get => (string)(BencodeString)dict["announce"]; }
@@ -37,6 +43,71 @@ namespace BitTorrentFeatures
         public static Torrent ReadStream(Stream stream)
         {
             return new Torrent(stream);
+        }
+
+        private List<IPEndPoint>? myPeers = null;
+        public List<IPEndPoint> Peers
+        {
+            get
+            {
+                if (myPeers != null) return myPeers;
+                return FetchPeers();
+            }
+        }
+
+        private List<IPEndPoint> FetchPeers()
+        {
+            myPeers = [];
+
+            using HttpClient client = new();
+            UriBuilder builder = new(TrackerUrl)
+            {
+                Query =
+                $"info_hash=%{BitConverter.ToString(InfoHash).Replace('-', '%').ToLower()}&" +
+                $"peer_id={MY_PEER_ID}&" +
+                $"port=6881&" +
+                $"uploaded=0&" +
+                $"downloaded=0&" +
+                $"left={Length}&" +
+                $"compact=1"
+            };
+
+            var response = client.Send(new HttpRequestMessage(HttpMethod.Get, builder.Uri));
+            Stream stream = response.Content.ReadAsStream();
+            BencodeReader reader = new(stream);
+            var dict = reader.ReadDictionary();
+            ReadOnlySpan<byte> peers = ((BencodeString)dict["peers"]).Bytes;
+
+            for (int i = 0; i < peers.Length; i += 6)
+            {
+                IPAddress address = new(peers[i..(i + 4)]);
+                ushort portNumber = BitConverter.ToUInt16(MiscUtils.BigEndian(peers[(i + 4)..(i + 6)]));
+                myPeers.Add(new IPEndPoint(address, portNumber));
+            }
+
+            return myPeers;
+        }
+
+        public TorrentClient PerformHandshake(IPEndPoint peer)
+        {
+            TcpClient client = new();
+            client.Connect(peer);
+            NetworkStream ns = client.GetStream();
+
+            ns.WriteByte(Convert.ToByte(PROTOCOL.Length));
+            ns.Write(Encoding.UTF8.GetBytes(PROTOCOL));
+            for (int i = 0; i < 8; i++) ns.WriteByte(0);
+            ns.Write(InfoHash);
+            ns.Write(Encoding.UTF8.GetBytes(MY_PEER_ID));
+
+            BinaryReader br = new(ns);
+            byte len = br.ReadByte();
+            string protocol = Encoding.UTF8.GetString(br.ReadBytes(len));
+            if (protocol != PROTOCOL) throw new Exception("protocol does not match");
+            br.ReadBytes(8);
+            byte[] hash = br.ReadBytes(20);
+            string peerID = Encoding.UTF8.GetString(br.ReadBytes(20));
+            return new TorrentClient(this, client, hash, peerID);
         }
     }
 }
