@@ -24,6 +24,7 @@ namespace BitTorrentFeatures
         {
             BinaryReader br = new(stream);
             int length = BitConverter.ToInt32(MiscUtils.BigEndian(br.ReadBytes(4)));
+            Console.WriteLine(length);
             var message = new PeerMessage((Id)br.ReadByte(), br.ReadBytes(length));
             return message;
         }
