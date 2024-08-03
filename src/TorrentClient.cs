@@ -21,6 +21,7 @@ namespace BitTorrentFeatures
 
         public void DownloadPiece(FileInfo pieceFile, int pieceIndex)
         {
+            Console.WriteLine("start");
             NetworkStream ns = tcp.GetStream();
             var message = PeerMessage.Recieve(ns);
             if (message.Type != PeerMessage.Id.Bitfield) throw new Exception("not a bitfield");
@@ -30,7 +31,7 @@ namespace BitTorrentFeatures
 
             int current = 0;
             List<Block> blocks = [];
-            Console.WriteLine("test1");
+            Console.WriteLine("e");
             while (current < Tor.PieceLength)
             {
                 int next = current + 16 * 1024;
