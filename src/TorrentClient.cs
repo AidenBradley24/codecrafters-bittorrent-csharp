@@ -16,6 +16,7 @@ namespace BitTorrentFeatures
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             tcp.Dispose();
         }
 
@@ -29,14 +30,14 @@ namespace BitTorrentFeatures
             message = PeerMessage.Recieve(ns);
             if (message.Type != PeerMessage.Id.Unchoke) throw new Exception("not a unchoke");
 
-            int current = 0;
+            uint current = 0;
             List<Block> blocks = [];
 
             while (current < Tor.PieceLength)
             {
                 const int BLOCK_LENGTH = 16 * 1024;
-                int next = current + BLOCK_LENGTH;
-                int length = next < (int)Tor.PieceLength ? BLOCK_LENGTH : (int)Tor.PieceLength - current;
+                uint next = current + BLOCK_LENGTH;
+                uint length = next < (uint)Tor.PieceLength ? BLOCK_LENGTH : (uint)Tor.PieceLength - current;
                 Console.WriteLine($"block: {current}, length: {length}");
                 var request = PeerMessage.Request(pieceIndex, current, length);
                 request.Send(ns);

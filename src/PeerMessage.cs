@@ -48,7 +48,7 @@ namespace BitTorrentFeatures
             Send(stream, this);
         }
 
-        public static PeerMessage Request(int index, int begin, int length)
+        public static PeerMessage Request(int index, uint begin, uint length)
         {
             byte[] payload =
             [
