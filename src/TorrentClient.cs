@@ -33,11 +33,13 @@ namespace BitTorrentFeatures
             uint current = 0;
             List<Block> blocks = [];
 
+            const uint BLOCK_LENGTH = 16 * 1024;
+            uint PIECE_LENGTH = (uint)Math.Min(Tor.Length - (pieceIndex * BLOCK_LENGTH), Tor.PieceLength);
+
             while (current < Tor.PieceLength)
             {
-                const int BLOCK_LENGTH = 16 * 1024;
                 uint next = current + BLOCK_LENGTH;
-                uint length = next < (uint)Tor.PieceLength ? BLOCK_LENGTH : (uint)Tor.PieceLength - current;
+                uint length = next < PIECE_LENGTH ? BLOCK_LENGTH : PIECE_LENGTH - current;
                 Console.WriteLine($"block: {current}, length: {length}");
                 var request = PeerMessage.Request(pieceIndex, current, length);
                 request.Send(ns);
