@@ -31,10 +31,10 @@ namespace BitTorrentFeatures
             if (message.Type != PeerMessage.Id.Unchoke) throw new Exception("not a unchoke");
 
             uint current = 0;
-            List<Block> blocks = [];
 
             const uint BLOCK_LENGTH = 16 * 1024;
             uint PIECE_LENGTH = (uint)Math.Min(Tor.Length - (pieceIndex * BLOCK_LENGTH), Tor.PieceLength);
+            int blockCount = 0;
 
             while (current < Tor.PieceLength)
             {
@@ -44,7 +44,12 @@ namespace BitTorrentFeatures
                 var request = PeerMessage.Request(pieceIndex, current, length);
                 request.Send(ns);
                 current = next;
+                blockCount++;
+            }
 
+            List<Block> blocks = [];
+            for (int i = 0; i < blockCount; i++)
+            {
                 var response = PeerMessage.Recieve(ns);
                 Block block = response.AsBlock();
                 blocks.Add(block);
