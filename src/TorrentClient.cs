@@ -34,8 +34,9 @@ namespace BitTorrentFeatures
 
             const uint BLOCK_LENGTH = 16 * 1024;
             uint PIECE_LENGTH = (uint)Math.Min(Tor.Length - (pieceIndex * BLOCK_LENGTH), Tor.PieceLength);
-            int blockCount = 0;
+            int blockCount = (int)Math.Ceiling((double)PIECE_LENGTH / BLOCK_LENGTH);
 
+            var recieveTask = RecieveBlocks(ns, blockCount);
             while (current < Tor.PieceLength)
             {
                 uint next = current + BLOCK_LENGTH;
@@ -44,22 +45,27 @@ namespace BitTorrentFeatures
                 var request = PeerMessage.Request(pieceIndex, current, length);
                 request.Send(ns);
                 current = next;
-                blockCount++;
             }
 
-            List<Block> blocks = [];
-            for (int i = 0; i < blockCount; i++)
-            {
-                var response = PeerMessage.Recieve(ns);
-                Block block = response.AsBlock();
-                blocks.Add(block);
-            }
-
-            byte[] data = Block.Combine(blocks);
+            recieveTask.Wait();
+            byte[] data = recieveTask.Result;
             byte[] hash = Tor.Pieces.ElementAt(pieceIndex);
             if (!SHA1.HashData(data).SequenceEqual(hash)) throw new Exception("Hash does not match for piece " + pieceIndex);
             using var fs = pieceFile.OpenWrite();
             fs.Write(data);
+        }
+
+        private static async Task<byte[]> RecieveBlocks(NetworkStream ns, int blockCount)
+        {
+            List<Block> blocks = [];
+            for (int i = 0; i < blockCount; i++)
+            {
+                var response = await PeerMessage.RecieveAsync(ns);
+                Block block = response.AsBlock();
+                blocks.Add(block);
+            }
+
+            return Block.Combine(blocks);
         }
     }
 }

@@ -30,6 +30,18 @@ namespace BitTorrentFeatures
             return message;
         }
 
+        public static async Task<PeerMessage> RecieveAsync(Stream stream)
+        {
+            byte[] lengthBytes = new byte[4];
+            await stream.ReadExactlyAsync(lengthBytes);
+            int length = BitConverter.ToInt32(MiscUtils.BigEndian(lengthBytes));
+            Id type = (Id)stream.ReadByte();
+            byte[] payload = new byte[length - 1]; // subtract 1 for id byte
+            await stream.ReadExactlyAsync(payload);
+            var message = new PeerMessage(type, payload);
+            return message;
+        }
+
         public static void Send(Stream stream, Id type, byte[]? payload)
         {
             BinaryWriter bw = new(stream);
