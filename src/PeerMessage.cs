@@ -71,9 +71,9 @@ namespace BitTorrentFeatures
 
     public class Block
     {
-        public int start;
-        public int end;
-        public byte[] block;
+        private readonly int start;
+        private readonly int end;
+        private readonly byte[] block;
 
         private Block(int start, int end, byte[] block)
         {
