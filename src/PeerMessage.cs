@@ -25,9 +25,7 @@ namespace BitTorrentFeatures
             BinaryReader br = new(stream);
             int length = BitConverter.ToInt32(MiscUtils.BigEndian(br.ReadBytes(4)));
             Id type = (Id)br.ReadByte();
-            Console.WriteLine(length);
-            Console.WriteLine(type);
-            byte[] payload = br.ReadBytes(length);
+            byte[] payload = br.ReadBytes(length - 1); // subtract 1 for id byte
             var message = new PeerMessage(type, payload);
             return message;
         }
@@ -35,7 +33,7 @@ namespace BitTorrentFeatures
         public static void Send(Stream stream, Id type, byte[]? payload)
         {
             BinaryWriter bw = new(stream);
-            bw.Write(MiscUtils.BigEndian(BitConverter.GetBytes(payload?.Length ?? 0)));
+            bw.Write(MiscUtils.BigEndian(BitConverter.GetBytes(payload?.Length + 1 ?? 1)));
             bw.Write((byte)type);
             if (payload != null) bw.Write(payload);
         }
