@@ -107,12 +107,98 @@ namespace BitTorrentFeatures
             br.ReadBytes(8);
             byte[] hash = br.ReadBytes(20);
             string peerID = MiscUtils.Hex(br.ReadBytes(20));
-            return new TorrentClient(this, client, hash, peerID);
+            return new TorrentClient(this, client, peerID);
         }
 
         public TorrentClient PerformHandshake()
         {
             return PerformHandshake(Peers.First());
+        }
+
+        public void Download(FileInfo finalFile)
+        {
+            // 1) get pieces
+            int numberOfPieces = (int)Math.Ceiling((double)Length / PieceLength);
+            Queue<int> pieces = new(Enumerable.Range(0, numberOfPieces));
+
+            // 2) start connections
+            const int MAX_CONNECTIONS = 5;
+
+            List<TorrentClient> connections = [];
+            int peerCount = Math.Min(MAX_CONNECTIONS, Peers.Count);
+            for (int i = 0; i < peerCount; i++)
+            {
+                TorrentClient client = PerformHandshake(Peers.ElementAt(i));
+                connections.Add(client);
+            }
+
+            // 3) download
+            List<Task<FileInfo>> downloadTasks = [];
+            DirectoryInfo downloadDir = Directory.CreateTempSubdirectory();
+            foreach (TorrentClient client in connections) 
+            {
+                if (pieces.TryDequeue(out int piece))
+                {
+                    var task = PieceWorker(client, piece, downloadDir);
+                    downloadTasks.Add(task);
+                }
+            }
+
+            List<FileInfo> pieceFiles = [];
+            while (downloadTasks.Count > 0)
+            {
+                Task.WaitAny(downloadTasks.ToArray());
+
+                int completedIndex = downloadTasks.FindIndex(t => t.IsCompleted);
+                Task<FileInfo> completedTask = downloadTasks[completedIndex];
+                if (completedTask.IsFaulted)
+                {
+                    Console.WriteLine($"download failed on peer " + completedIndex);
+                    pieces.Enqueue(completedIndex);
+                }
+                else
+                {
+                    Console.WriteLine($"download completed on peer " + completedIndex);
+                    FileInfo result = completedTask.Result;
+                    pieceFiles.Add(result);
+                }
+
+                if (pieces.TryDequeue(out int piece))
+                {
+                    var task = PieceWorker(connections[completedIndex], piece, downloadDir);
+                    downloadTasks[completedIndex] = task;
+                }
+                else
+                {
+                    downloadTasks.RemoveAt(completedIndex);
+                }
+            }
+
+            // 4) reconstruct file
+            using FileStream fs = finalFile.OpenWrite();
+            foreach (var pieceFile in pieceFiles.OrderBy(f => f.Name))
+            {
+                using FileStream pfs = pieceFile.OpenRead();
+                pfs.CopyTo(fs);
+            }
+
+            // 5) cleanup
+            downloadDir.Delete(true);
+        }
+
+        private static Task<FileInfo> PieceWorker(TorrentClient client, int piece, DirectoryInfo downloadDir)
+        {
+            FileInfo file = new(Path.Combine(downloadDir.FullName, piece.ToString()));
+            try
+            {
+                var task = Task.Run(() => client.DownloadPiece(file, piece));
+                task.Wait();
+            }
+            catch (Exception ex)
+            {
+                return Task.FromException<FileInfo>(ex);
+            }
+            return Task.FromResult(file);
         }
     }
 }

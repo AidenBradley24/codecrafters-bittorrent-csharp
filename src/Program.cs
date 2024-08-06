@@ -57,6 +57,14 @@ else if (command == "download_piece")
     client.DownloadPiece(file, pieceIndex);
     Console.WriteLine($"Piece {pieceIndex} downloaded to {args[2]}");
 }
+else if (command == "download")
+{
+    FileInfo file = new(args[2]);
+    using FileStream fs = new(args[3], FileMode.Open);
+    var tor = Torrent.ReadStream(fs);
+    tor.Download(file);
+    Console.WriteLine($"Downloaded {args[3]} to {args[2]}.");
+}
 else
 {
     throw new InvalidOperationException($"Invalid command: {command}");

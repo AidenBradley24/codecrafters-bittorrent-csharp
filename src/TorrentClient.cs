@@ -1,20 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BitTorrentFeatures
 {
-    public class TorrentClient(Torrent torrent, TcpClient tcp, byte[] hash, string peerID) : IDisposable
+    public class TorrentClient : IDisposable
     {
-        public Torrent Tor { get; } = torrent;
-        public string PeerID { get; } = peerID;
+        public Torrent Tor { get; }
+        public string PeerID { get; }
 
         private readonly SemaphoreSlim semaphore = new(5); // allowing 5 requests pending
+        private readonly TcpClient tcp;
+        private readonly NetworkStream ns;
+
+        public TorrentClient(Torrent torrent, TcpClient tcp, string peerID)
+        {
+            this.tcp = tcp;
+            Tor = torrent;
+            PeerID = peerID;
+            ns = tcp.GetStream();
+            var message = PeerMessage.Recieve(ns);
+            if (message.Type != PeerMessage.Id.Bitfield) throw new Exception("not a bitfield");
+            PeerMessage.Send(ns, PeerMessage.Id.Interested, null);
+            message = PeerMessage.Recieve(ns);
+            if (message.Type != PeerMessage.Id.Unchoke) throw new Exception("not a unchoke");
+        }
 
         public void Dispose()
         {
@@ -24,20 +33,12 @@ namespace BitTorrentFeatures
 
         public void DownloadPiece(FileInfo pieceFile, int pieceIndex)
         {
-            NetworkStream ns = tcp.GetStream();
-            var message = PeerMessage.Recieve(ns);
-            if (message.Type != PeerMessage.Id.Bitfield) throw new Exception("not a bitfield");
-            PeerMessage.Send(ns, PeerMessage.Id.Interested, null);
-            message = PeerMessage.Recieve(ns);
-            if (message.Type != PeerMessage.Id.Unchoke) throw new Exception("not a unchoke");
-
-            uint current = 0;
-
             const uint BLOCK_LENGTH = 16 * 1024;
             uint PIECE_LENGTH = (uint)Math.Min(Tor.Length - (pieceIndex * Tor.PieceLength), Tor.PieceLength);
             int blockCount = (int)Math.Ceiling((double)PIECE_LENGTH / BLOCK_LENGTH);
 
             var recieveTask = RecieveBlocks(ns, blockCount);
+            uint current = 0;
             while (current < PIECE_LENGTH)
             {
                 uint next = current + BLOCK_LENGTH;
