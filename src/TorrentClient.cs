@@ -35,7 +35,7 @@ namespace BitTorrentFeatures
             uint current = 0;
 
             const uint BLOCK_LENGTH = 16 * 1024;
-            uint PIECE_LENGTH = (uint)Math.Min(Tor.Length - (pieceIndex * BLOCK_LENGTH), Tor.PieceLength);
+            uint PIECE_LENGTH = (uint)Math.Min(Tor.Length - (pieceIndex * Tor.PieceLength), Tor.PieceLength);
             int blockCount = (int)Math.Ceiling((double)PIECE_LENGTH / BLOCK_LENGTH);
 
             var recieveTask = RecieveBlocks(ns, blockCount);
