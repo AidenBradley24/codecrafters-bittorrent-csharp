@@ -18,9 +18,7 @@ namespace BitTorrentFeatures
             Tor = torrent;
             PeerID = peerID;
             ns = tcp.GetStream();
-            var task = PeerMessage.RecieveAsync(ns);
-            task.Wait();
-            var message = task.Result;
+            var message = PeerMessage.Recieve(ns);
             if (message.Type != PeerMessage.Id.Bitfield) throw new Exception("not a bitfield");
             PeerMessage.Send(ns, PeerMessage.Id.Interested, null);
             message = PeerMessage.Recieve(ns);
