@@ -166,7 +166,8 @@ namespace BitTorrentFeatures
 
                 if (pieces.TryDequeue(out int piece))
                 {
-                    var task = PieceWorker(connections[completedIndex], piece, downloadDir);
+                    TorrentClient client = connections[completedIndex];
+                    var task = Task.Run(() => PieceWorker(client, piece, downloadDir));
                     downloadTasks[completedIndex] = task;
                 }
                 else
