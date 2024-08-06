@@ -53,7 +53,7 @@ else if (command == "download_piece")
     using FileStream fs = new(args[3], FileMode.Open);
     var tor = Torrent.ReadStream(fs);
     int pieceIndex = int.Parse(args[4]);
-    using TorrentClient client = tor.PerformHandshake(tor.Peers.First());
+    using TorrentClient client = tor.PerformHandshake();
     client.DownloadPiece(file, pieceIndex);
     Console.WriteLine($"Piece {pieceIndex} downloaded to {args[2]}");
 }

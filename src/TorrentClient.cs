@@ -14,6 +14,8 @@ namespace BitTorrentFeatures
         public Torrent Tor { get; } = torrent;
         public string PeerID { get; } = peerID;
 
+        private readonly SemaphoreSlim semaphore = new(5);
+
         public void Dispose()
         {
             GC.SuppressFinalize(this);
@@ -43,6 +45,7 @@ namespace BitTorrentFeatures
                 uint length = next < PIECE_LENGTH ? BLOCK_LENGTH : PIECE_LENGTH - current;
                 Console.WriteLine($"block: {current}, length: {length}");
                 var request = PeerMessage.Request(pieceIndex, current, length);
+                semaphore.Wait();
                 request.Send(ns);
                 current = next;
             }
@@ -55,7 +58,7 @@ namespace BitTorrentFeatures
             fs.Write(data);
         }
 
-        private static async Task<byte[]> RecieveBlocks(NetworkStream ns, int blockCount)
+        private async Task<byte[]> RecieveBlocks(NetworkStream ns, int blockCount)
         {
             List<Block> blocks = [];
             for (int i = 0; i < blockCount; i++)
@@ -63,6 +66,7 @@ namespace BitTorrentFeatures
                 var response = await PeerMessage.RecieveAsync(ns);
                 Block block = response.AsBlock();
                 blocks.Add(block);
+                semaphore.Release();
             }
 
             return Block.Combine(blocks);

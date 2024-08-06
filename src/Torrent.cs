@@ -109,5 +109,10 @@ namespace BitTorrentFeatures
             string peerID = Encoding.UTF8.GetString(br.ReadBytes(20));
             return new TorrentClient(this, client, hash, peerID);
         }
+
+        public TorrentClient PerformHandshake()
+        {
+            return PerformHandshake(Peers.First());
+        }
     }
 }
