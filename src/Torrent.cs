@@ -138,7 +138,7 @@ namespace BitTorrentFeatures
             {
                 if (pieces.TryDequeue(out int piece))
                 {
-                    var task = PieceWorker(client, piece, downloadDir);
+                    Task<FileInfo> task = Task.Run(() => PieceWorker(client, piece, downloadDir));
                     downloadTasks.Add(task);
                 }
             }
@@ -190,8 +190,7 @@ namespace BitTorrentFeatures
             FileInfo file = new(Path.Combine(downloadDir.FullName, piece.ToString()));
             try
             {
-                var task = Task.Run(() => client.DownloadPiece(file, piece));
-                task.Wait();
+                client.DownloadPiece(file, piece);
             }
             catch (Exception ex)
             {
