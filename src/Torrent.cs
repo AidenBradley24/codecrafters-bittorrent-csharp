@@ -123,13 +123,12 @@ namespace BitTorrentFeatures
 
             // 2) start connections
             const int MAX_CONNECTIONS = 5;
-
-            List<TorrentClient> connections = [];
             int peerCount = Math.Min(MAX_CONNECTIONS, Peers.Count);
+            TorrentClient[] connections = new TorrentClient[peerCount];
             for (int i = 0; i < peerCount; i++)
             {
                 TorrentClient client = PerformHandshake(Peers.ElementAt(i));
-                connections.Add(client);
+                connections[i] = client;
             }
 
             // 3) download
