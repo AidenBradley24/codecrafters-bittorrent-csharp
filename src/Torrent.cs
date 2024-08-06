@@ -106,7 +106,7 @@ namespace BitTorrentFeatures
             if (protocol != PROTOCOL) throw new Exception("protocol does not match");
             br.ReadBytes(8);
             byte[] hash = br.ReadBytes(20);
-            string peerID = Encoding.UTF8.GetString(br.ReadBytes(20));
+            string peerID = MiscUtils.Hex(br.ReadBytes(20));
             return new TorrentClient(this, client, hash, peerID);
         }
 

@@ -24,7 +24,6 @@ namespace BitTorrentFeatures
 
         public void DownloadPiece(FileInfo pieceFile, int pieceIndex)
         {
-            Console.WriteLine("start");
             NetworkStream ns = tcp.GetStream();
             var message = PeerMessage.Recieve(ns);
             if (message.Type != PeerMessage.Id.Bitfield) throw new Exception("not a bitfield");
@@ -45,7 +44,6 @@ namespace BitTorrentFeatures
                 uint length = next < PIECE_LENGTH ? BLOCK_LENGTH : PIECE_LENGTH - current;
                 Console.WriteLine($"block: {current}, length: {length}");
                 var request = PeerMessage.Request(pieceIndex, current, length);
-                Console.WriteLine("wait");
                 semaphore.Wait();
                 request.Send(ns);
                 current = next;
@@ -68,7 +66,6 @@ namespace BitTorrentFeatures
                 Block block = response.AsBlock();
                 blocks.Add(block);
                 semaphore.Release();
-                Console.WriteLine("release");
             }
 
             return Block.Combine(blocks);
