@@ -100,6 +100,8 @@ namespace BitTorrentFeatures
             ns.Write(InfoHash);
             ns.Write(Encoding.UTF8.GetBytes(MY_PEER_ID));
 
+            Thread.Sleep(500);
+
             BinaryReader br = new(ns);
             byte len = br.ReadByte();
             string protocol = Encoding.UTF8.GetString(br.ReadBytes(len));
