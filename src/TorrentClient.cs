@@ -3,27 +3,16 @@ using System.Security.Cryptography;
 
 namespace BitTorrentFeatures
 {
-    public class TorrentClient : IDisposable
+    public class TorrentClient(Torrent torrent, TcpClient tcp, string peerID) : IDisposable
     {
-        public Torrent Tor { get; }
-        public string PeerID { get; }
+        public Torrent Tor { get; } = torrent;
+        public string PeerID { get; } = peerID;
 
         private readonly SemaphoreSlim semaphore = new(5); // allowing 5 requests pending
-        private readonly TcpClient tcp;
-        private readonly NetworkStream ns;
+        private readonly TcpClient tcp = tcp;
+        private readonly NetworkStream ns = tcp.GetStream();
 
-        public TorrentClient(Torrent torrent, TcpClient tcp, string peerID)
-        {
-            this.tcp = tcp;
-            Tor = torrent;
-            PeerID = peerID;
-            ns = tcp.GetStream();
-            var message = PeerMessage.Recieve(ns);
-            if (message.Type != PeerMessage.Id.Bitfield) throw new Exception("not a bitfield");
-            PeerMessage.Send(ns, PeerMessage.Id.Interested, null);
-            message = PeerMessage.Recieve(ns);
-            if (message.Type != PeerMessage.Id.Unchoke) throw new Exception("not a unchoke");
-        }
+        private bool ready = false;
 
         public void Dispose()
         {
@@ -31,8 +20,20 @@ namespace BitTorrentFeatures
             tcp.Dispose();
         }
 
+        private void GetReady()
+        {
+            var message = PeerMessage.Recieve(ns);
+            if (message.Type != PeerMessage.Id.Bitfield) throw new Exception("not a bitfield");
+            PeerMessage.Send(ns, PeerMessage.Id.Interested, null);
+            message = PeerMessage.Recieve(ns);
+            if (message.Type != PeerMessage.Id.Unchoke) throw new Exception("not a unchoke");
+            ready = true;
+        }
+
         public void DownloadPiece(FileInfo pieceFile, int pieceIndex)
         {
+            if (!ready) GetReady();
+
             const uint BLOCK_LENGTH = 16 * 1024;
             uint PIECE_LENGTH = (uint)Math.Min(Tor.Length - (pieceIndex * Tor.PieceLength), Tor.PieceLength);
             int blockCount = (int)Math.Ceiling((double)PIECE_LENGTH / BLOCK_LENGTH);
