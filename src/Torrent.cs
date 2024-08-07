@@ -100,8 +100,6 @@ namespace BitTorrentFeatures
             ns.Write(InfoHash);
             ns.Write(Encoding.UTF8.GetBytes(MY_PEER_ID));
 
-            Thread.Sleep(100);
-
             BinaryReader br = new(ns);
             byte len = br.ReadByte();
             string protocol = Encoding.UTF8.GetString(br.ReadBytes(len));
@@ -109,8 +107,6 @@ namespace BitTorrentFeatures
             br.ReadBytes(8);
             byte[] hash = br.ReadBytes(20);
             string peerID = MiscUtils.Hex(br.ReadBytes(20));
-
-            Thread.Sleep(100);
 
             return new TorrentClient(this, client, peerID);
         }
